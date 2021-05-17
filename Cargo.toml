@@ -1,0 +1,17 @@
+[package]
+name = "plop-tui"
+version = "0.1.0"
+authors = ["igor <ilaborie@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+log = "0.4"
+fern =  "0.6"
+chrono = "0.4"
+
+tui = { version = "0.15", features = ["crossterm"], default-features = false }
+crossterm = "0.19"
+tokio = { version = "1", features = ["full"] }
+
+eyre = "0.6"
+lazy_static = "1.4"
