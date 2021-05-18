@@ -1,10 +1,10 @@
 use std::time::Duration;
 
-pub mod network;
+pub mod handler;
 
+// For this dummy application we only need two IO event
 #[derive(Debug, Clone)]
 pub enum IoEvent {
-    Initialize,
-    Sleep(Duration),
-    AddMessage(String),
+    Initialize,      // Launch to initialize the application
+    Sleep(Duration), // Just take a little break
 }

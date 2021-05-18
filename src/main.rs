@@ -1,50 +1,34 @@
 use std::sync::mpsc::channel;
 use std::sync::Arc;
+use std::thread;
 
-use chrono::Local;
 use eyre::Result;
+use log::LevelFilter;
 use plop_tui::app::App;
-use plop_tui::io::network::Network;
+use plop_tui::io::handler::IoAsyncHandler;
 use plop_tui::io::IoEvent;
 use plop_tui::{start_tokio, start_ui};
-use tokio::sync::Mutex;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let (log_tx, log_rx) = channel::<String>();
+    // IO event should be handled to another thread that the UI thread
     let (sync_io_tx, sync_io_rx) = channel::<IoEvent>();
 
-    let app = Arc::new(Mutex::new(App::new(sync_io_tx.clone())));
+    // App is updated into the IO thread and the UI thread
+    // See [Shared-State Concurrency](https://doc.rust-lang.org/book/ch16-03-shared-state.html)
+    // Note that's a Tokio Mutex
+    let app = Arc::new(tokio::sync::Mutex::new(App::new(sync_io_tx.clone())));
     let app_ui = Arc::clone(&app);
 
-    // Configue log
-    fern::Dispatch::new()
-        .format(move |out, message, record| {
-            out.finish(format_args!(
-                "{} [{}] [{}] {}",
-                Local::now().format("%Y-%m-%d %H:%M:%S"),
-                record.target(),
-                record.level(),
-                message
-            ))
-        })
-        .level(log::LevelFilter::Debug)
-        .chain(log_tx)
-        .apply()?;
+    // Configue log with [tui_logger](https://github.com/gin66/tui-logger)
+    // Log will be captured and send to a specfic widget
+    tui_logger::init_logger(LevelFilter::Debug).unwrap();
+    tui_logger::set_default_level(log::LevelFilter::Debug);
 
-    // Handle IO
-    std::thread::spawn(move || {
-        let mut network = Network::new(&app);
+    // Handle IO in a specifc thread
+    thread::spawn(move || {
+        let mut network = IoAsyncHandler::new(&app);
         start_tokio(sync_io_rx, &mut network);
-    });
-
-    // Handle Logs
-    std::thread::spawn(move || {
-        while let Ok(message) = log_rx.recv() {
-            if let Err(err) = sync_io_tx.send(IoEvent::AddMessage(message)) {
-                eprintln!("{:?}", err)
-            }
-        }
     });
 
     start_ui(&app_ui).await?;

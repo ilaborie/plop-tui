@@ -110,17 +110,6 @@ impl Display for Key {
             Key::Alt(c) => write!(f, "<Alt+{}>", c),
             Key::Ctrl(c) => write!(f, "<Ctrl+{}>", c),
             Key::Char(c) => write!(f, "<{}>", c),
-            Key::Left | Key::Right | Key::Up | Key::Down => write!(f, "<{:?} Arrow Key>", self),
-            Key::Enter
-            | Key::Tab
-            | Key::Backspace
-            | Key::Esc
-            | Key::Ins
-            | Key::Delete
-            | Key::Home
-            | Key::End
-            | Key::PageUp
-            | Key::PageDown => write!(f, "<{:?}>", self),
             _ => write!(f, "<{:?}>", self),
         }
     }

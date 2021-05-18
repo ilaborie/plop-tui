@@ -1,22 +1,109 @@
+use std::collections::HashMap;
+use std::fmt::{self, Display};
+use std::slice::Iter;
+
 use crate::inputs::key::Key;
 
-#[derive(Debug, Clone)]
-pub struct Action {
-    keys: Vec<Key>,
-    help: String,
+/// We define all available action
+#[derive(Hash, Debug, Clone, Copy, Eq, PartialEq)]
+pub enum Action {
+    Quit,
+    Sleep,
+    IncrementDelay,
+    DecrementDelay,
 }
 
 impl Action {
-    pub fn new(help: &str, keys: Vec<Key>) -> Self {
-        let help = help.to_string();
-        Self { keys, help }
+    /// All available actions
+    pub fn iterator() -> Iter<'static, Action> {
+        static ACTIONS: [Action; 4] = [
+            Action::Quit,
+            Action::Sleep,
+            Action::IncrementDelay,
+            Action::DecrementDelay,
+        ];
+        ACTIONS.iter()
     }
 
+    /// List of key associated to action
     pub fn keys(&self) -> &[Key] {
-        self.keys.as_slice()
+        match self {
+            Action::Quit => &[Key::Ctrl('c'), Key::Char('q')],
+            Action::Sleep => &[Key::Char('s')],
+            Action::IncrementDelay => &[Key::Char('+')],
+            Action::DecrementDelay => &[Key::Char('-')],
+        }
+    }
+}
+
+/// Could display a user friendly short description of action
+impl Display for Action {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let str = match self {
+            Action::Quit => "Quit",
+            Action::Sleep => "Sleep",
+            Action::IncrementDelay => "Increment delay",
+            Action::DecrementDelay => "Decrement delay",
+        };
+        write!(f, "{}", str)
+    }
+}
+
+/// The application should have some contextual actions.
+#[derive(Default, Debug, Clone)]
+pub struct Actions(Vec<Action>);
+
+impl Actions {
+    /// Given a key, find the corresponding action
+    pub fn find(&self, key: Key) -> Option<&Action> {
+        Action::iterator()
+            .filter(|action| self.0.contains(action))
+            .find(|action| action.keys().contains(&key))
     }
 
-    pub fn help(&self) -> &str {
-        self.help.as_str()
+    /// Get contextual actions.
+    /// (just for building a help view)
+    pub fn actions(&self) -> &[Action] {
+        self.0.as_slice()
+    }
+}
+
+impl From<Vec<Action>> for Actions {
+    /// Build contextual action
+    ///
+    /// # Panics
+    ///
+    /// If two actions have same key
+    fn from(actions: Vec<Action>) -> Self {
+        // Check key unicity
+        let mut map: HashMap<Key, Vec<Action>> = HashMap::new();
+        for action in actions.iter() {
+            for key in action.keys().iter() {
+                match map.get_mut(key) {
+                    Some(vec) => vec.push(*action),
+                    None => {
+                        map.insert(*key, vec![*action]);
+                    }
+                }
+            }
+        }
+        let errors = map
+            .iter()
+            .filter(|(_, actions)| actions.len() > 1) // at least two actions share same shortcut
+            .map(|(key, actions)| {
+                let actions = actions
+                    .iter()
+                    .map(Action::to_string)
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!("Conflict key {} with actions {}", key, actions)
+            })
+            .collect::<Vec<_>>();
+        if !errors.is_empty() {
+            panic!("{}", errors.join("; "))
+        }
+
+        // Ok, we can create contextual actions
+        Self(actions)
     }
 }
