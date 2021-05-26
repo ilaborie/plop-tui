@@ -99,7 +99,7 @@ impl App {
         self.is_loading = false;
     }
 
-    pub fn sleeped(&mut self) {
+    pub fn slept(&mut self) {
         self.state.incr_sleep();
     }
 }

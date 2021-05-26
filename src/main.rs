@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use eyre::Result;
+use log::LevelFilter;
 use plop_tui::app::App;
 use plop_tui::io::handler::IoAsyncHandler;
 use plop_tui::io::IoEvent;
@@ -13,6 +14,10 @@ async fn main() -> Result<()> {
     // We need to share the App between thread
     let app = Arc::new(tokio::sync::Mutex::new(App::new(sync_io_tx.clone())));
     let app_ui = Arc::clone(&app);
+
+    // Configue log
+    tui_logger::init_logger(LevelFilter::Debug).unwrap();
+    tui_logger::set_default_level(log::LevelFilter::Debug);
 
     // Handle IO in a specifc thread
     tokio::spawn(async move {

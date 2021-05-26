@@ -50,7 +50,7 @@ impl IoAsyncHandler {
         info!("⏰ Wake up !");
         // Notify the app for having slept
         let mut app = self.app.lock().await;
-        app.sleeped();
+        app.slept();
 
         Ok(())
     }
