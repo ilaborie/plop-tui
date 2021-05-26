@@ -107,3 +107,48 @@ impl From<Vec<Action>> for Actions {
         Self(actions)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn should_find_action_by_key() {
+        let actions: Actions = vec![Action::Quit, Action::Sleep].into();
+        let result = actions.find(Key::Ctrl('c'));
+        assert_eq!(result, Some(&Action::Quit));
+    }
+
+    #[test]
+    fn should_find_action_by_key_not_found() {
+        let actions: Actions = vec![Action::Quit, Action::Sleep].into();
+        let result = actions.find(Key::Alt('w'));
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn should_create_actions_from_vec() {
+        let _actions: Actions = vec![
+            Action::Quit,
+            Action::Sleep,
+            Action::IncrementDelay,
+            Action::DecrementDelay,
+        ]
+        .into();
+    }
+
+    #[test]
+    #[should_panic]
+    fn should_panic_when_create_actions_conflict_key() {
+        let _actions: Actions = vec![
+            Action::Quit,
+            Action::DecrementDelay,
+            Action::Sleep,
+            Action::IncrementDelay,
+            Action::IncrementDelay,
+            Action::Quit,
+            Action::DecrementDelay,
+        ]
+        .into();
+    }
+}
