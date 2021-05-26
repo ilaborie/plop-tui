@@ -1,9 +1,12 @@
+use std::time::Duration;
+
+use symbols::line;
 use tui::backend::Backend;
 use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
-use tui::style::{Color, Style};
+use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
-use tui::widgets::{Block, BorderType, Borders, Cell, Paragraph, Row, Table};
-use tui::Frame;
+use tui::widgets::{Block, BorderType, Borders, Cell, LineGauge, Paragraph, Row, Table};
+use tui::{symbols, Frame};
 use tui_logger::TuiLoggerWidget;
 
 use super::actions::Actions;
@@ -24,6 +27,7 @@ where
             [
                 Constraint::Length(3),
                 Constraint::Min(10),
+                Constraint::Length(3),
                 Constraint::Length(12),
             ]
             .as_ref(),
@@ -46,9 +50,15 @@ where
     let help = draw_help(app.actions());
     rect.render_widget(help, body_chunks[1]);
 
+    // Duration LineGauge
+    if let Some(duration) = app.state().duration() {
+        let duration_block = draw_duration(duration);
+        rect.render_widget(duration_block, chunks[2]);
+    }
+
     // Logs
     let logs = draw_logs();
-    rect.render_widget(logs, chunks[2]);
+    rect.render_widget(logs, chunks[3]);
 }
 
 fn draw_title<'a>() -> Paragraph<'a> {
@@ -104,6 +114,27 @@ fn draw_body<'a>(loading: bool, state: &AppState) -> Paragraph<'a> {
             .style(Style::default().fg(Color::White))
             .border_type(BorderType::Plain),
     )
+}
+
+fn draw_duration(duration: &Duration) -> LineGauge {
+    let sec = duration.as_secs();
+    let label = format!("{}s", sec);
+    let ratio = sec as f64 / 10.0;
+    LineGauge::default()
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Sleep duration"),
+        )
+        .gauge_style(
+            Style::default()
+                .fg(Color::Cyan)
+                .bg(Color::Black)
+                .add_modifier(Modifier::BOLD),
+        )
+        .line_set(line::THICK)
+        .label(label)
+        .ratio(ratio)
 }
 
 fn draw_help(actions: &Actions) -> Table {

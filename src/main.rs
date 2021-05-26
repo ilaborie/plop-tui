@@ -15,7 +15,7 @@ async fn main() -> Result<()> {
     let app = Arc::new(tokio::sync::Mutex::new(App::new(sync_io_tx.clone())));
     let app_ui = Arc::clone(&app);
 
-    // Configue log
+    // Configure log
     tui_logger::init_logger(LevelFilter::Debug).unwrap();
     tui_logger::set_default_level(log::LevelFilter::Debug);
 

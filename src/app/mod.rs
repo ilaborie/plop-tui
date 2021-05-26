@@ -54,6 +54,16 @@ impl App {
                     }
                     AppReturn::Continue
                 }
+                // IncrementDelay and DecrementDelay is handled in the UI thread
+                Action::IncrementDelay => {
+                    self.state.increment_delay();
+                    AppReturn::Continue
+                }
+                // Note, that we clamp the duration, so we stay >= 0
+                Action::DecrementDelay => {
+                    self.state.decrement_delay();
+                    AppReturn::Continue
+                }
             }
         } else {
             warn!("No action accociated to {}", key);
@@ -91,7 +101,13 @@ impl App {
 
     pub fn initialized(&mut self) {
         // Update contextual actions
-        self.actions = vec![Action::Quit, Action::Sleep].into();
+        self.actions = vec![
+            Action::Quit,
+            Action::Sleep,
+            Action::IncrementDelay,
+            Action::DecrementDelay,
+        ]
+        .into();
         self.state = AppState::initialized()
     }
 
