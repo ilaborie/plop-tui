@@ -61,7 +61,7 @@ fn check_size(rect: &Rect) {
 }
 
 fn draw_body<'a>(loading: bool, state: &AppState) -> Paragraph<'a> {
-    let initalized_text = if state.is_initialized() {
+    let initialized_text = if state.is_initialized() {
         "Initialized"
     } else {
         "Not Initialized !"
@@ -78,7 +78,7 @@ fn draw_body<'a>(loading: bool, state: &AppState) -> Paragraph<'a> {
         String::default()
     };
     Paragraph::new(vec![
-        Spans::from(Span::raw(initalized_text)),
+        Spans::from(Span::raw(initialized_text)),
         Spans::from(Span::raw(loading_text)),
         Spans::from(Span::raw(sleep_text)),
         Spans::from(Span::raw(tick_text)),

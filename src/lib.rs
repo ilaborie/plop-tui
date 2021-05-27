@@ -27,7 +27,7 @@ pub async fn start_ui(app: &Arc<tokio::sync::Mutex<App>>) -> Result<()> {
 
     // User event handler
     let tick_rate = Duration::from_millis(200);
-    let events = Events::new(tick_rate);
+    let mut events = Events::new(tick_rate);
 
     // Trigger state change from Init to Initialized
     {
@@ -43,12 +43,13 @@ pub async fn start_ui(app: &Arc<tokio::sync::Mutex<App>>) -> Result<()> {
         terminal.draw(|rect| ui::draw(rect, &app))?;
 
         // Handle inputs
-        let result = match events.next()? {
+        let result = match events.next().await {
             InputEvent::Input(key) => app.do_action(key).await,
             InputEvent::Tick => app.update_on_tick().await,
         };
         // Check if we should exit
         if result == AppReturn::Exit {
+            events.close();
             break;
         }
     }
